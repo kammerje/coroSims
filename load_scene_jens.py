@@ -60,6 +60,7 @@ class scene():
             fstar = np.array(temp[0, 15:])[np.newaxis, :] # Jy
             fstar_interp = sp.interpolate.interp1d(waves, fstar[0], kind='cubic')
             self.fstar = fstar_interp(self.wave)[np.newaxis, :] # Jy
+            self.fstar_V = fstar_interp(0.540) # Jy, Johnson V-band
         else:
             xystar = np.array(temp[:, 1:3]) # pix
             xystar_x_interp = sp.interpolate.interp1d(times, xystar[:, 0], kind='cubic')
@@ -78,6 +79,10 @@ class scene():
             fstar = np.array(temp[:, 15:]) # Jy
             fstar_interp = sp.interpolate.interp2d(waves, times, fstar, kind='quintic')
             self.fstar = fstar_interp(self.wave, self.time) # Jy
+            self.fstar_V = fstar_interp(0.540, 0.) # Jy, Johnson V-band
+        self.dstar = hdul[3].header['DIST'] # pc
+        self.Lstar = hdul[3].header['LSTAR'] # Lsun
+        self.Vstar = hdul[3].header['M_V'] # absmag
         
         # Load planets.
         self.Nplanets = len(hdul)-4
@@ -136,5 +141,47 @@ class scene():
         
         # Close scene from exoVista.
         hdul.close()
+        
+        pass
+    
+    def replace_disk(self,
+                     Nzodi=1.):
+        
+        # plt.figure()
+        # plt.imshow(np.log10(self.disk[0, 0]), origin='lower')
+        # plt.colorbar()
+        # plt.show()
+        
+        # Compute angular separation of HZ.
+        a_HZ = 1.*np.sqrt(self.Lstar/1.) # au
+        r_HZ = a_HZ/self.dstar # arcsec
+        
+        # Make face-on 1/r^2 disk.
+        ramp = np.arange(self.disk.shape[2])-self.disk.shape[2]/2.+0.5
+        xx, yy = np.meshgrid(ramp, ramp)
+        disk = 1./(xx**2+yy**2)
+        
+        # Compute disk flux at V-band.
+        F0 = 3781 # Jy, Johnson V-band zero point
+        Vmag_sun = 4.83 # absmag
+        Vmag_1zodi = 22. # absmag/arcsec^2
+        Vflux_1zodi = F0*10.**(-Vmag_1zodi/2.5) # Jy/arcsec^2
+        Vflux_Nzodi = Vflux_1zodi*Nzodi*10.**(-(self.Vstar-Vmag_sun)/2.5) # Jy/arcsec^2
+        
+        # Compute disk flux at respective wavelength.
+        Xflux_Nzodi = Vflux_Nzodi*self.fstar/self.fstar_V # Jy/arcsec^2
+        Xflux_Nzodi *= (self.pixscale/1e3)**2 # Jy/pix
+        
+        # Renormalize disk flux at angular separation of HZ.
+        self.disk = np.zeros(self.disk.shape)
+        for i in range(self.disk.shape[0]):
+            for j in range(self.disk.shape[1]):
+                rnfact = Xflux_Nzodi[i, j]*(r_HZ/(self.pixscale/1e3))**2
+                self.disk[i, j] = disk.copy()*rnfact
+        
+        # plt.figure()
+        # plt.imshow(np.log10(self.disk[0, 0]), origin='lower')
+        # plt.colorbar()
+        # plt.show()
         
         pass

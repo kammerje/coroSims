@@ -33,9 +33,12 @@ mas2rad = np.pi/180./3600./1000.
 class coro():
     
     def __init__(self,
-                 cdir):
+                 cdir,
+                 verbose=True):
         
-        print('Initializing coronagraph...')
+        self.verbose = verbose
+        if (self.verbose == True):
+            print('Initializing coronagraph...')
         
         # Load on-axis data.
         self.stellar_intens_1 = pyfits.getdata(cdir+'stellar_intens_1.fits', 0)
@@ -87,7 +90,7 @@ class coro():
         self.set_pang(0.)
         
         # Center coronagraph model so that image size is odd and central pixel is center.
-        if (('LUVOIR-A_APLC_10bw_smallFPM_2021-05-05_Dyn10pm-nostaticabb' in cdir) or ('LUVOIR-A_APLC_18bw_medFPM_2021-05-07_Dyn10pm-nostaticabb' in cdir) or ('LUVOIR-B-VC6_timeseries' in cdir)):
+        if (('LUVOIR-A_APLC_10bw_smallFPM_2021-05-05_Dyn10pm-nostaticabb' in cdir) or ('LUVOIR-A_APLC_18bw_medFPM_2021-05-07_Dyn10pm-nostaticabb' in cdir) or ('LUVOIR-B-VC6_timeseries' in cdir) or ('LUVOIR-B_VC6_timeseries' in cdir)):
             self.stellar_intens_1 = self.stellar_intens_1[:, 1:, 1:]
             if (self.hasref == True):
                 self.stellar_intens_2 = self.stellar_intens_2[:, 1:, 1:]
@@ -236,7 +239,8 @@ class coro():
                    odir,
                    haystacks=False):
         
-        print('Loading scene...')
+        if (self.verbose == True):
+            print('Loading scene...')
         
         # Load scene.
         if (haystacks == False):
@@ -282,7 +286,8 @@ class coro():
                  tag='sci',
                  save=True):
         
-        print('Adding star...')
+        if (self.verbose == True):
+            print('Adding star...')
         
         # Compute star contrast.
         angdiam_lod = self.angdiam*mas2rad/(self.scene.wave*1e-6/self.diam) # lambda/D
@@ -327,7 +332,8 @@ class coro():
                  tag='sci',
                  save=True):
         
-        print('Adding planets...')
+        if (self.verbose == True):
+            print('Adding planets...')
         
         # Compute planet separations and position angles.
         plan_offs = (self.scene.xyplanet-self.scene.xystar)*self.scene.pixscale # mas
@@ -426,7 +432,8 @@ class coro():
                  tag='sci',
                  save=True):
         
-        print('Adding disk...')
+        if (self.verbose == True):
+            print('Adding disk...')
         
         # Load data cube of spatially dependent PSFs.
         ddir = 'coronagraphs_psflib/'
@@ -566,7 +573,8 @@ class coro():
                 tag='sci',
                 save_all=True):
         
-        print('Simulating science...')
+        if (self.verbose == True):
+            print('Simulating science...')
         
         # Initialize science images.
         imgs = np.zeros((self.scene.Ntime, self.scene.Nwave, self.imsz, self.imsz)) # ph/s
@@ -621,7 +629,8 @@ class coro():
                 save_all=False):
         
         if (self.hasref == True):
-            print('Simulating reference...')
+            if (self.verbose == True):
+                print('Simulating reference...')
             
             # Initialize reference images.
             imgs = np.zeros((self.scene.Ntime, self.scene.Nwave, self.imsz, self.imsz)) # ph/s
