@@ -31,7 +31,7 @@ mas2rad = np.pi/180./3600./1000.
 
 
 # =============================================================================
-# CORONAGRAPH
+# DETECTOR
 # =============================================================================
 
 class det():
@@ -47,10 +47,10 @@ class det():
         self.owa = owa # lambda/D
         # self.iwa = 8.5 # lambda/D
         # self.owa = 26. # lambda/D
-        # self.iwa = 2.5 # lambda/D
-        # self.owa = 13. # lambda/D
-        self.imsz = 100
-        # self.imsz = 200
+        self.iwa = 2.5 # lambda/D
+        self.owa = 26. # lambda/D
+        # self.imsz = 100
+        self.imsz = 250
         self.imsc_scene = 2. # mas
         self.fill = 1e-100
         self.gain = 5000. # e-/ph, electron multiplying gain
